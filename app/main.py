@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
+import os
 
 from .database import get_db, engine
 from .models import Base
@@ -13,8 +14,10 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-app.mount("/static", StaticFiles(directory="../static"), name="static")
+# Статика
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -25,7 +28,7 @@ app.add_middleware(
 
 @app.get("/")
 def serve_frontend():
-    return FileResponse("../static/index.html")
+    return FileResponse("static/index.html")
 
 @app.post("/api/users/")
 def create_or_get_user(user: UserCreate, db: Session = Depends(get_db)):
