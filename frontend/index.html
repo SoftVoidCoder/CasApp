@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallet App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div id="loading">
+            <div class="spinner"></div>
+            <p>Loading your profile...</p>
+        </div>
+        
+        <div id="app" class="hidden">
+            <!-- Profile Header -->
+            <div class="profile-header">
+                <div class="user-avatar" id="userAvatar">👤</div>
+                <div class="user-info">
+                    <h1 class="user-name" id="userName">User</h1>
+                    <p class="user-username" id="userUsername">@username</p>
+                </div>
+            </div>
+            
+            <!-- Balance Card -->
+            <div class="balance-card">
+                <div class="balance-label">Current Balance</div>
+                <div class="balance-amount" id="balance">$0.00</div>
+                <div class="balance-currency">USD</div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="actions-grid">
+                <button class="action-btn primary" onclick="showDepositForm()">
+                    <span class="icon">💳</span>
+                    <span>Deposit</span>
+                </button>
+                <button class="action-btn secondary" onclick="connectWallet()">
+                    <span class="icon">🔗</span>
+                    <span>Connect Wallet</span>
+                </button>
+            </div>
+            
+            <!-- Wallet Info -->
+            <div class="info-section" id="walletSection">
+                <h3>Connected Wallet</h3>
+                <div class="wallet-info">
+                    <div class="wallet-address" id="walletAddress">Not connected</div>
+                    <button class="btn-small" onclick="disconnectWallet()">Disconnect</button>
+                </div>
+            </div>
+            
+            <!-- Deposit Form -->
+            <div class="modal-overlay hidden" id="depositModal">
+                <div class="modal">
+                    <div class="modal-header">
+                        <h3>Make Deposit</h3>
+                        <button class="close-btn" onclick="hideDepositForm()">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <input 
+                            type="number" 
+                            id="depositAmount" 
+                            class="form-input" 
+                            placeholder="Enter amount ($)" 
+                            min="1" 
+                            step="0.01"
+                        >
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn secondary" onclick="hideDepositForm()">Cancel</button>
+                        <button class="btn primary" onclick="submitDeposit()">Confirm Deposit</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Messages -->
+            <div id="messageContainer"></div>
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>
