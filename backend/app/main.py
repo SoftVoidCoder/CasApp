@@ -3,22 +3,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
-import os
 
 from .database import get_db, engine
 from .models import Base
 from .schemas import UserCreate, UserUpdate, DepositRequest
 from .crud import get_user_by_telegram_id, create_user, update_user_wallet, create_deposit
 
-# Create tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-# Serve frontend files
-app.mount("/static", StaticFiles(directory="../../frontend"), name="static")
+app.mount("/static", StaticFiles(directory="../static"), name="static")
 
-# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -29,11 +25,7 @@ app.add_middleware(
 
 @app.get("/")
 def serve_frontend():
-    return FileResponse("../../frontend/index.html")
-
-@app.get("/api")
-def api_root():
-    return {"message": "Telegram Wallet API"}
+    return FileResponse("../static/index.html")
 
 @app.post("/api/users/")
 def create_or_get_user(user: UserCreate, db: Session = Depends(get_db)):
@@ -61,11 +53,7 @@ def make_deposit(telegram_id: str, deposit: DepositRequest, db: Session = Depend
     user = create_deposit(db, telegram_id, deposit.amount, deposit.description)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
-    
-    return {
-        "message": "Deposit successful",
-        "new_balance": user.balance
-    }
+    return {"message": "Deposit successful", "new_balance": user.balance}
 
 @app.get("/api/health")
 def health_check():

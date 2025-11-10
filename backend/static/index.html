@@ -15,23 +15,18 @@
         </div>
         
         <div id="app" class="hidden">
-            <!-- Profile Header -->
             <div class="profile-header">
                 <div class="user-avatar" id="userAvatar">👤</div>
-                <div class="user-info">
-                    <h1 class="user-name" id="userName">User</h1>
-                    <p class="user-username" id="userUsername">@username</p>
-                </div>
+                <div class="user-name" id="userName">User</div>
+                <div class="user-username" id="userUsername"></div>
             </div>
             
-            <!-- Balance Card -->
             <div class="balance-card">
                 <div class="balance-label">Current Balance</div>
                 <div class="balance-amount" id="balance">$0.00</div>
                 <div class="balance-currency">USD</div>
             </div>
             
-            <!-- Action Buttons -->
             <div class="actions-grid">
                 <button class="action-btn primary" onclick="showDepositForm()">
                     <span class="icon">💳</span>
@@ -43,7 +38,6 @@
                 </button>
             </div>
             
-            <!-- Wallet Info -->
             <div class="info-section" id="walletSection">
                 <h3>Connected Wallet</h3>
                 <div class="wallet-info">
@@ -52,7 +46,6 @@
                 </div>
             </div>
             
-            <!-- Deposit Form -->
             <div class="modal-overlay hidden" id="depositModal">
                 <div class="modal">
                     <div class="modal-header">
@@ -60,14 +53,7 @@
                         <button class="close-btn" onclick="hideDepositForm()">×</button>
                     </div>
                     <div class="modal-body">
-                        <input 
-                            type="number" 
-                            id="depositAmount" 
-                            class="form-input" 
-                            placeholder="Enter amount ($)" 
-                            min="1" 
-                            step="0.01"
-                        >
+                        <input type="number" id="depositAmount" class="form-input" placeholder="Enter amount ($)" min="1" step="0.01">
                     </div>
                     <div class="modal-footer">
                         <button class="btn secondary" onclick="hideDepositForm()">Cancel</button>
@@ -76,11 +62,10 @@
                 </div>
             </div>
             
-            <!-- Messages -->
             <div id="messageContainer"></div>
         </div>
     </div>
     
-    <script src="/app.js"></script>
+    <script src="/static/app.js"></script>
 </body>
 </html>

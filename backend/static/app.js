@@ -201,7 +201,6 @@ class TelegramWalletApp {
     }
 }
 
-// Global functions
 function showDepositForm() {
     window.app.showDepositForm();
 }
@@ -222,7 +221,6 @@ function submitDeposit() {
     window.app.submitDeposit();
 }
 
-// Start app
 document.addEventListener('DOMContentLoaded', () => {
     window.app = new TelegramWalletApp();
 });
