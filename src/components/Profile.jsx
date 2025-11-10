@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react'
-import './Profile.css'
+import '../styles/Profile.css'
 
 /* Встроенный компонент подключения кошелька (без отдельных файлов) */
 function WalletConnectInline() {
