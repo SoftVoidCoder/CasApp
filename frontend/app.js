@@ -1,7 +1,7 @@
 class TelegramWalletApp {
     constructor() {
         this.tg = window.Telegram.WebApp;
-        this.API_BASE = 'https://your-app.onrender.com'; // ЗАМЕНИ НА СВОЙ URL
+        this.API_BASE = window.location.origin + '/api';
         this.currentUser = null;
         
         this.init();
