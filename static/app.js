@@ -3,6 +3,7 @@ class TelegramWalletApp {
         this.tg = window.Telegram.WebApp;
         this.API_BASE = window.location.origin + '/api';
         this.currentUser = null;
+        this.tonConnect = null;
         
         this.init();
     }
@@ -10,6 +11,7 @@ class TelegramWalletApp {
     async init() {
         try {
             this.tg.expand();
+            this.tg.ready();
             
             const initData = this.tg.initDataUnsafe;
             const user = initData.user;
@@ -25,13 +27,148 @@ class TelegramWalletApp {
                 last_name: user.last_name
             });
 
+            // Инициализируем TON Connect
+            this.initTONConnect();
+            
             this.updateUserProfile();
             this.updateUI();
             this.showApp();
             
         } catch (error) {
-            this.showMessage('Error: ' + error.message, 'error');
-            this.showApp(); // Все равно показываем апп
+            console.error('Init error:', error);
+            this.showApp();
+        }
+    }
+
+    initTONConnect() {
+        // Создаем манифест для TON Connect
+        const manifest = {
+            url: window.location.origin,
+            name: 'Wallet App',
+            iconUrl: window.location.origin + '/static/icon.png'
+        };
+
+        // Инициализируем TON Connect
+        this.tonConnect = new TonConnect({
+            manifest: manifest
+        });
+
+        // Восстанавливаем соединение если было
+        const restoredConnection = this.tonConnect.restoreConnection();
+        if (restoredConnection) {
+            this.onWalletConnected(restoredConnection);
+        }
+    }
+
+    async connectWallet() {
+        try {
+            // Получаем список доступных кошельков
+            const walletsList = await this.tonConnect.getWallets();
+            
+            // Показываем модалку с выбором кошельков
+            this.showWalletsModal(walletsList);
+            
+        } catch (error) {
+            this.showMessage('Error loading wallets: ' + error.message, 'error');
+        }
+    }
+
+    showWalletsModal(walletsList) {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal">
+                <div class="modal-header">
+                    <h3>Connect TON Wallet</h3>
+                    <button class="close-btn" onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="wallets-list">
+                        ${walletsList.map(wallet => `
+                            <div class="wallet-item" onclick="window.app.connectToWallet('${wallet.name}')">
+                                <img src="${wallet.imageUrl}" alt="${wallet.name}">
+                                <div class="wallet-info">
+                                    <span class="wallet-name">${wallet.name}</span>
+                                    <span class="wallet-about">${wallet.about || 'TON Wallet'}</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    async connectToWallet(walletName) {
+        try {
+            document.querySelector('.modal-overlay')?.remove();
+            
+            // Подключаемся к выбранному кошельку
+            const connection = await this.tonConnect.connect(walletName);
+            this.onWalletConnected(connection);
+            
+        } catch (error) {
+            this.showMessage('Connection failed: ' + error.message, 'error');
+        }
+    }
+
+    onWalletConnected(connection) {
+        if (connection && connection.account) {
+            const walletAddress = connection.account.address;
+            this.saveWalletAddress(walletAddress);
+            this.showMessage('TON wallet connected successfully!', 'success');
+        }
+    }
+
+    async saveWalletAddress(address) {
+        try {
+            const response = await fetch(
+                `${this.API_BASE}/users/${this.currentUser.telegram_id}/wallet`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        wallet_address: address
+                    })
+                }
+            );
+
+            if (response.ok) {
+                this.currentUser = await response.json();
+                this.updateUI();
+            }
+        } catch (error) {
+            console.error('Error saving wallet:', error);
+        }
+    }
+
+    async disconnectWallet() {
+        try {
+            await this.tonConnect.disconnect();
+            
+            const response = await fetch(
+                `${this.API_BASE}/users/${this.currentUser.telegram_id}/wallet`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        wallet_address: null
+                    })
+                }
+            );
+
+            if (response.ok) {
+                this.currentUser = await response.json();
+                this.updateUI();
+                this.showMessage('Wallet disconnected!', 'success');
+            }
+        } catch (error) {
+            this.showMessage('Error disconnecting wallet', 'error');
         }
     }
 
@@ -72,7 +209,10 @@ class TelegramWalletApp {
         
         if (this.currentUser.wallet_address) {
             walletSection.style.display = 'block';
-            walletAddress.textContent = this.currentUser.wallet_address;
+            // Сокращаем адрес для отображения
+            const shortAddr = this.currentUser.wallet_address.slice(0, 8) + '...' + this.currentUser.wallet_address.slice(-8);
+            walletAddress.textContent = shortAddr;
+            walletAddress.title = this.currentUser.wallet_address; // полный адрес в tooltip
         } else {
             walletSection.style.display = 'none';
         }
@@ -83,63 +223,9 @@ class TelegramWalletApp {
         document.getElementById('app').classList.remove('hidden');
     }
 
-    async connectWallet() {
-        const walletAddress = prompt('Enter your TON wallet address:');
-        
-        if (walletAddress && walletAddress.trim()) {
-            try {
-                const response = await fetch(
-                    `${this.API_BASE}/users/${this.currentUser.telegram_id}/wallet`,
-                    {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            wallet_address: walletAddress.trim()
-                        })
-                    }
-                );
-
-                if (response.ok) {
-                    this.currentUser = await response.json();
-                    this.updateUI();
-                    this.showMessage('Wallet connected!', 'success');
-                }
-            } catch (error) {
-                this.showMessage('Error: ' + error.message, 'error');
-            }
-        }
-    }
-
-    async disconnectWallet() {
-        try {
-            const response = await fetch(
-                `${this.API_BASE}/users/${this.currentUser.telegram_id}/wallet`,
-                {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        wallet_address: null
-                    })
-                }
-            );
-
-            if (response.ok) {
-                this.currentUser = await response.json();
-                this.updateUI();
-                this.showMessage('Wallet disconnected!', 'success');
-            }
-        } catch (error) {
-            this.showMessage('Error disconnecting wallet', 'error');
-        }
-    }
-
     showDepositForm() {
         if (!this.currentUser.wallet_address) {
-            this.showMessage('Connect wallet first', 'error');
+            this.showMessage('Please connect wallet first', 'error');
             return;
         }
         document.getElementById('depositModal').classList.remove('hidden');
@@ -213,7 +299,14 @@ function submitDeposit() {
     window.app.submitDeposit();
 }
 
-// Запускаем app
-document.addEventListener('DOMContentLoaded', () => {
-    window.app = new TelegramWalletApp();
-});
+// Загружаем TON Connect SDK
+const script = document.createElement('script');
+script.src = 'https://unpkg.com/tonconnect-sdk@latest/dist/tonconnect-sdk.min.js';
+document.head.appendChild(script);
+
+// Запускаем app после загрузки SDK
+script.onload = () => {
+    document.addEventListener('DOMContentLoaded', () => {
+        window.app = new TelegramWalletApp();
+    });
+};
