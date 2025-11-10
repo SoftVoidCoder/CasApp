@@ -3,12 +3,15 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.static('public'));
-app.use(express.json());
 
-app.post('/api/wallet/connect', (req, res) => {
-    const walletData = req.body;
-    console.log('Wallet connected:', walletData);
-    res.json(walletData);
+app.get('/tonconnect-manifest.json', (req, res) => {
+    res.json({
+        "url": "https://your-casino.onrender.com",
+        "name": "Telegram Casino",
+        "iconUrl": "https://your-casino.onrender.com/icon.png",
+        "termsOfUseUrl": "https://your-casino.onrender.com/terms",
+        "privacyPolicyUrl": "https://your-casino.onrender.com/privacy"
+    });
 });
 
 app.listen(port, () => {

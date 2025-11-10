@@ -4,19 +4,19 @@
     <title>Casino</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
 </head>
 <body>
     <div class="container">
         <div class="profile-section">
-            <img id="userAvatar" src="" class="avatar" style="display:none;">
-            <h2 id="userName">Игрок</h2>
-            <div class="balance">Баланс: <span id="balance">0</span> TON</div>
-            
-            <button class="wallet-btn" onclick="connectWallet()">Подключить TON кошелек</button>
-            
-            <div id="walletInfo" class="wallet-info">
-                <p>Адрес: <span id="walletAddress"></span></p>
-                <p>Баланс кошелька: <span id="walletBalance"></span> TON</p>
+            <h2>Профиль игрока</h2>
+            <div id="user-info">
+                <p>Имя: <span id="user-name">Гость</span></p>
+            </div>
+            <div id="ton-connect-button"></div>
+            <div id="wallet-info" class="wallet-info">
+                <p>Адрес: <span id="wallet-address"></span></p>
+                <p>Баланс: <span id="wallet-balance"></span> TON</p>
             </div>
         </div>
     </div>
