@@ -1,5 +1,75 @@
-import React, { useEffect, useState } from 'react'
-import '../styles/Profile.css'
+import React, { useEffect, useState, useMemo } from 'react'
+import './Profile.css'
+
+/* Встроенный компонент подключения кошелька (без отдельных файлов) */
+function WalletConnectInline() {
+  const [connected, setConnected] = useState(false)
+  const [address, setAddress] = useState('')
+
+  useEffect(() => {
+    const tg = window.Telegram?.WebApp
+    tg?.ready?.()
+  }, [])
+
+  const short = useMemo(() => {
+    if (!address) return ''
+    return `${address.slice(0, 4)}...${address.slice(-4)}`
+  }, [address])
+
+  const onConnect = async () => {
+    try {
+      // Попробуем открыть TonConnect UI, если библиотека загружена
+      const u = window.TonConnectUI || window.tonConnectUI || null
+      if (u && typeof u.openModal === 'function') {
+        await u.openModal()
+      }
+      // Для макета — просто имитируем подключение
+      setConnected(true)
+      setAddress('EQBf...TONX')
+    } catch (e) {
+      setConnected(true)
+      setAddress('EQBf...TONX')
+    }
+  }
+
+  const onDisconnect = () => {
+    setConnected(false)
+    setAddress('')
+  }
+
+  return connected ? (
+    <button className="wallet-btn" onClick={onDisconnect}>
+      <span className="btn-icon">🔌</span> Отключить кошелёк ({short})
+    </button>
+  ) : (
+    <button className="wallet-btn" onClick={onConnect}>
+      <span className="btn-icon">💳</span> Подключить кошелёк
+    </button>
+  )
+}
+
+/* Меню игр — только требуемые пункты */
+function GameMenuInline({ onOpen }) {
+  const items = [
+    { name: 'Профиль', icon: '👤' },
+    { name: 'Краш', icon: '📈' },
+    { name: 'Монетка', icon: '🪙' },
+    { name: 'Мины', icon: '💣' },
+  ]
+  return (
+    <>
+      <div className="section-title">Меню игр</div>
+      <div className="games-grid">
+        {items.map((it) => (
+          <div key={it.name} className="game-card" onClick={() => onOpen?.(it.name)}>
+            <div className="game-icon">{it.icon}</div>
+            <div className="game-name">{it.name}</div>
+          </div>
+        ))}
+      </div>
+    </>
+  )
+}
 
 const Profile = () => {
   const [user, setUser] = useState(null)
@@ -8,89 +78,55 @@ const Profile = () => {
   useEffect(() => {
     const tg = window.Telegram?.WebApp
     if (tg) {
-      tg.expand()
+      tg.expand?.()
+      tg.ready?.()
       const userData = tg.initDataUnsafe?.user
       setUser(userData)
-      // Заглушка баланса
-      setBalance(1000)
     }
   }, [])
 
-  const handleDeposit = () => {
-    // Логика пополнения
-    console.log('Deposit clicked')
-  }
+  const name = user?.first_name || 'Игрок'
+  const userId = user?.id || '0000'
+  const photo = user?.photo_url || ''
 
-  const handleWithdraw = () => {
-    // Логика вывода
-    console.log('Withdraw clicked')
+  const onDeposit = () => {
+    // здесь будет логика депозита
+    console.log('deposit')
   }
 
   return (
     <div className="profile">
-      {/* Шапка профиля */}
       <div className="profile-header">
-        {user?.photo_url && (
-          <img src={user.photo_url} alt="Avatar" className="profile-avatar" />
+        {photo ? (
+          <img src={photo} alt="Avatar" className="profile-avatar" />
+        ) : (
+          <img
+            src="https://avatars.githubusercontent.com/u/9919?s=200&v=4"
+            alt="Avatar"
+            className="profile-avatar"
+          />
         )}
         <div className="profile-info">
-          <h2>{user?.first_name || 'Игрок'}</h2>
-          <p className="profile-id">ID: {user?.id || '0000'}</p>
+          <h2>{name}</h2>
+          <p className="profile-id">ID: {userId}</p>
+        </div>
+
+        <div className="balance-badge" title="Баланс">
+          <span className="balance-diamond">💎</span>
+          <span>{balance.toFixed(2)}</span>
         </div>
       </div>
 
-      {/* Баланс */}
-      <div className="balance-section">
-        <div className="balance-label">Ваш баланс</div>
-        <div className="balance-amount">{balance} ₽</div>
-      </div>
-
-      {/* Кнопки действий */}
-      <div className="actions-section">
-        <button className="btn btn-deposit" onClick={handleDeposit}>
-          <span>💎</span>
-          Пополнить
+      <div className="controls-card">
+        <button className="deposit-btn" onClick={onDeposit}>
+          <span className="btn-icon">💎</span>
+          Пополнить баланс
         </button>
-        <button className="btn btn-withdraw" onClick={handleWithdraw}>
-          <span>📤</span>
-          Вывести
-        </button>
+
+        <WalletConnectInline />
       </div>
 
-      {/* Меню игр */}
-      <div className="game-menu">
-        <h3>Игры</h3>
-        <div className="games-grid">
-          <div className="game-card">
-            <div className="game-icon">💣</div>
-            <span className="game-name">Mines</span>
-          </div>
-          <div className="game-card">
-            <div className="game-icon">📈</div>
-            <span className="game-name">Crash</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Нижняя навигация */}
-      <div className="bottom-nav">
-        <div className="nav-item active">
-          <div className="nav-icon">👤</div>
-          <div className="nav-label">Профиль</div>
-        </div>
-        <div className="nav-item">
-          <div className="nav-icon">🎮</div>
-          <div className="nav-label">Игры</div>
-        </div>
-        <div className="nav-item">
-          <div className="nav-icon">📊</div>
-          <div className="nav-label">Статистика</div>
-        </div>
-        <div className="nav-item">
-          <div className="nav-icon">⚙️</div>
-          <div className="nav-label">Настройки</div>
-        </div>
-      </div>
+      <GameMenuInline onOpen={(name) => console.log('open:', name)} />
     </div>
   )
 }
