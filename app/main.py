@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
-import os
 
 from .database import get_db, engine
 from .models import Base
@@ -14,10 +13,8 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-# Статика
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

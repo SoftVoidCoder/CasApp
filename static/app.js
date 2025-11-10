@@ -83,33 +83,39 @@ class TelegramWalletApp {
     }
 
     async connectWallet() {
-        const walletAddress = prompt('Enter your wallet address:');
-        
-        if (walletAddress && walletAddress.trim()) {
+        if (this.tg.WebAppTelegramWallet) {
             try {
-                const response = await fetch(
-                    `${this.API_BASE}/users/${this.currentUser.telegram_id}/wallet`,
-                    {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            wallet_address: walletAddress.trim()
-                        })
-                    }
-                );
+                // Запрос доступа к кошельку
+                const result = await this.tg.WebAppTelegramWallet.requestAccess();
+                
+                if (result && result.address) {
+                    // Сохраняем адрес кошелька
+                    const response = await fetch(
+                        `${this.API_BASE}/users/${this.currentUser.telegram_id}/wallet`,
+                        {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                wallet_address: result.address
+                            })
+                        }
+                    );
 
-                if (response.ok) {
-                    this.currentUser = await response.json();
-                    this.updateUI();
-                    this.showMessage('Wallet connected successfully!', 'success');
+                    if (response.ok) {
+                        this.currentUser = await response.json();
+                        this.updateUI();
+                        this.showMessage('Telegram Wallet connected successfully!', 'success');
+                    }
                 } else {
-                    throw new Error('Failed to connect wallet');
+                    this.showMessage('Wallet access denied', 'error');
                 }
             } catch (error) {
-                this.showMessage('Error: ' + error.message, 'error');
+                this.showMessage('Error connecting Telegram Wallet: ' + error.message, 'error');
             }
+        } else {
+            this.showMessage('Telegram Wallet not available', 'error');
         }
     }
 
@@ -139,6 +145,10 @@ class TelegramWalletApp {
     }
 
     showDepositForm() {
+        if (!this.currentUser.wallet_address) {
+            this.showMessage('Please connect Telegram Wallet first', 'error');
+            return;
+        }
         document.getElementById('depositModal').classList.remove('hidden');
         document.getElementById('depositAmount').focus();
     }
@@ -156,32 +166,45 @@ class TelegramWalletApp {
             return;
         }
 
-        try {
-            const response = await fetch(
-                `${this.API_BASE}/users/${this.currentUser.telegram_id}/deposit`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        amount: amount,
-                        description: `Deposit of $${amount}`
-                    })
-                }
-            );
+        if (!this.tg.WebAppTelegramWallet) {
+            this.showMessage('Telegram Wallet not available', 'error');
+            return;
+        }
 
-            if (response.ok) {
-                const result = await response.json();
-                this.currentUser.balance = result.new_balance;
-                this.updateUI();
-                this.hideDepositForm();
-                this.showMessage(`Deposit of $${amount} successful!`, 'success');
-            } else {
-                throw new Error('Deposit failed');
+        try {
+            // Создаем инвойс через Telegram Wallet
+            const invoiceResult = await this.tg.WebAppTelegramWallet.createInvoice({
+                amount: amount * 100, // в копейках/центах
+                currency: 'USD',
+                description: `Deposit of $${amount}`
+            });
+
+            if (invoiceResult && invoiceResult.invoice_id) {
+                // Сохраняем депозит в базу после успешной оплаты
+                const response = await fetch(
+                    `${this.API_BASE}/users/${this.currentUser.telegram_id}/deposit`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            amount: amount,
+                            description: `Telegram Wallet deposit of $${amount}`
+                        })
+                    }
+                );
+
+                if (response.ok) {
+                    const result = await response.json();
+                    this.currentUser.balance = result.new_balance;
+                    this.updateUI();
+                    this.hideDepositForm();
+                    this.showMessage(`Deposit of $${amount} successful!`, 'success');
+                }
             }
         } catch (error) {
-            this.showMessage('Error: ' + error.message, 'error');
+            this.showMessage('Payment failed: ' + error.message, 'error');
         }
     }
 
