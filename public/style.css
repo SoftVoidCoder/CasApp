@@ -1,0 +1,44 @@
+body {
+    background: #1e1e1e;
+    color: white;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.profile-section {
+    background: #2d2d2d;
+    padding: 20px;
+    border-radius: 12px;
+    margin-top: 20px;
+}
+
+.wallet-btn {
+    width: 100%;
+    padding: 12px;
+    background: #0088cc;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 15px;
+}
+
+.wallet-info {
+    margin-top: 15px;
+    padding: 15px;
+    background: #3d3d3d;
+    border-radius: 8px;
+    display: none;
+}
+
+.balance {
+    font-size: 18px;
+    margin: 15px 0;
+}

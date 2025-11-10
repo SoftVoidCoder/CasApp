@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Casino</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="profile-section">
+            <h2>Профиль игрока</h2>
+            <div class="balance">Баланс: <span id="balance">0</span> TON</div>
+            
+            <button class="wallet-btn" onclick="connectWallet()">Подключить TON кошелек</button>
+            <button class="game-btn" onclick="startGame('dice')">Играть в кости</button>
+            <button class="game-btn" onclick="startGame('roulette')">Рулетка</button>
+            
+            <div id="walletInfo" class="wallet-info">
+                <p>Адрес: <span id="walletAddress"></span></p>
+                <p>Баланс кошелька: <span id="walletBalance"></span> TON</p>
+            </div>
+        </div>
+    </div>
+    <script src="wallet.js"></script>
+    <script src="games.js"></script>
+</body>
+</html>
