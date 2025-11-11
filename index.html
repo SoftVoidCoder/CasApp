@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TON Wallet App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://unpkg.com/@tonconnect/sdk@latest/dist/tonconnect-sdk.min.js"></script>
     <link rel="stylesheet" href="styles/style.css">
     <link rel="stylesheet" href="styles/wallet.css">
 </head>
@@ -19,63 +20,58 @@
         </header>
 
         <main class="main">
-            <!-- Profile Section -->
             <section class="profile-section">
                 <div class="balance-card">
                     <h3>Ваш баланс</h3>
                     <div class="balance-amount" id="balance">0 TON</div>
                 </div>
 
-                <!-- Wallet Connection -->
                 <div class="wallet-section" id="walletSection">
-                    <div class="wallet-status" id="walletStatus">
+                    <div class="wallet-status disconnected" id="walletStatus">
                         Кошелек не подключен
                     </div>
                     <button class="btn btn-primary" id="connectWalletBtn">
-                        Подключить кошелек
+                        Подключить кошелек TON
                     </button>
                 </div>
 
-                <!-- Connected Wallet Info -->
-                <div class="connected-wallet" id="connectedWallet" style="display: none;">
+                <div class="connected-wallet hidden" id="connectedWallet">
                     <div class="wallet-info">
-                        <span id="walletAddress"></span>
+                        <span id="walletAddress">Адрес: загрузка...</span>
                         <button class="btn btn-secondary" id="disconnectWalletBtn">
                             Отключить
                         </button>
                     </div>
                 </div>
 
-                <!-- Deposit Section -->
-                <div class="action-section" id="depositSection" style="display: none;">
+                <div class="action-section hidden" id="depositSection">
                     <h3>Пополнение счета</h3>
                     <div class="input-group">
-                        <input type="number" id="depositAmount" placeholder="Сумма в TON" min="0.1" step="0.1">
+                        <input type="number" id="depositAmount" placeholder="Сумма в TON" min="0.1" step="0.1" value="0.1">
                         <button class="btn btn-success" id="depositBtn">Пополнить</button>
                     </div>
                     <p class="min-amount">Минимальная сумма: 0.1 TON</p>
                 </div>
 
-                <!-- Withdraw Section -->
-                <div class="action-section" id="withdrawSection" style="display: none;">
+                <div class="action-section hidden" id="withdrawSection">
                     <h3>Вывод средств</h3>
                     <div class="input-group">
-                        <input type="number" id="withdrawAmount" placeholder="Сумма в TON" min="0.1" step="0.1">
+                        <input type="number" id="withdrawAmount" placeholder="Сумма в TON" min="0.1" step="0.1" value="0.1">
                         <button class="btn btn-warning" id="withdrawBtn">Вывести</button>
                     </div>
+                    <p class="min-amount">Минимальная сумма: 0.1 TON</p>
                 </div>
 
-                <!-- Transactions History -->
-                <div class="transactions-section" id="transactionsSection" style="display: none;">
+                <div class="transactions-section hidden" id="transactionsSection">
                     <h3>История операций</h3>
-                    <div class="transactions-list" id="transactionsList"></div>
+                    <div class="transactions-list" id="transactionsList">
+                        <div class="transaction-item">Нет операций</div>
+                    </div>
                 </div>
             </section>
         </main>
     </div>
 
-    <!-- TON Connect SDK -->
-    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <script src="js/tonconnect.js"></script>
     <script src="js/wallet.js"></script>
     <script src="js/app.js"></script>

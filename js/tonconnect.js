@@ -2,22 +2,26 @@ class TONConnectManager {
     constructor() {
         this.connector = null;
         this.walletInfo = null;
-        this.manifestUrl = 'https://your-app-url.com/tonconnect-manifest.json';
+        this.manifestUrl = window.location.origin + '/tonconnect-manifest.json';
         
         this.init();
     }
 
     async init() {
-        // Initialize TON Connect
-        this.connector = new TONConnectSDK.TonConnect({ manifestUrl: this.manifestUrl });
-        
-        // Check if wallet is already connected
-        await this.checkConnection();
-        
-        // Subscribe to connection status changes
-        this.connector.onStatusChange(wallet => {
-            this.handleWalletChange(wallet);
-        });
+        try {
+            // Initialize TON Connect
+            this.connector = TonConnect.createTonConnect({ manifestUrl: this.manifestUrl });
+            
+            // Check if wallet is already connected
+            await this.checkConnection();
+            
+            // Subscribe to connection status changes
+            this.connector.onStatusChange(wallet => {
+                this.handleWalletChange(wallet);
+            });
+        } catch (error) {
+            console.error('TON Connect init error:', error);
+        }
     }
 
     async checkConnection() {
@@ -43,7 +47,7 @@ class TONConnectManager {
 
     async connectWallet() {
         try {
-            const connectionSource = await this.connector.connectWallet();
+            const connectionSource = this.connector.connectWallet();
             return connectionSource;
         } catch (error) {
             console.error('Connection error:', error);
@@ -77,14 +81,12 @@ class TONConnectManager {
     }
 
     onWalletConnected(wallet) {
-        // This will be implemented in app.js
         if (window.onWalletConnected) {
             window.onWalletConnected(wallet);
         }
     }
 
     onWalletDisconnected() {
-        // This will be implemented in app.js
         if (window.onWalletDisconnected) {
             window.onWalletDisconnected();
         }

@@ -3,18 +3,17 @@ class WalletManager {
         this.balance = 0;
         this.transactions = [];
         this.userId = null;
-        this.apiUrl = window.location.hostname === 'localhost' 
-            ? 'http://localhost:3000/api'
-            : 'https://your-app.onrender.com/api';
+        this.apiUrl = window.location.origin + '/api';
         
         this.loadUserData();
     }
 
     generateUserId() {
-        // Generate user ID from Telegram Web App init data or create random
         if (window.Telegram && Telegram.WebApp) {
-            return Telegram.WebApp.initDataUnsafe.user?.id || 
-                   'user_' + Math.random().toString(36).substr(2, 9);
+            const tgUser = Telegram.WebApp.initDataUnsafe.user;
+            if (tgUser && tgUser.id) {
+                return 'tg_' + tgUser.id;
+            }
         }
         return 'user_' + Math.random().toString(36).substr(2, 9);
     }
@@ -30,7 +29,6 @@ class WalletManager {
                 this.transactions = userData.transactions || [];
                 this.updateUI();
             } else {
-                // Create new user
                 await this.createUser();
             }
         } catch (error) {
@@ -53,8 +51,11 @@ class WalletManager {
                 })
             });
             
-            if (!response.ok) {
-                throw new Error('Failed to create user');
+            if (response.ok) {
+                const userData = await response.json();
+                this.balance = userData.balance;
+                this.transactions = userData.transactions;
+                this.updateUI();
             }
         } catch (error) {
             console.error('Error creating user:', error);
@@ -79,7 +80,8 @@ class WalletManager {
             });
 
             if (!response.ok) {
-                throw new Error('Ошибка при пополнении');
+                const error = await response.json();
+                throw new Error(error.error || 'Ошибка при пополнении');
             }
 
             const result = await response.json();
@@ -92,10 +94,11 @@ class WalletManager {
             });
 
             this.updateUI();
-            this.showAlert('Депозит успешно выполнен!', 'success');
+            this.showAlert('✅ Депозит успешно выполнен!', 'success');
+            return result;
             
         } catch (error) {
-            this.showAlert(error.message, 'error');
+            this.showAlert('❌ ' + error.message, 'error');
             throw error;
         }
     }
@@ -107,6 +110,10 @@ class WalletManager {
 
         if (amount > this.balance) {
             throw new Error('Недостаточно средств на балансе');
+        }
+
+        if (!tonConnectManager || !tonConnectManager.isConnected()) {
+            throw new Error('Кошелек не подключен');
         }
 
         try {
@@ -123,7 +130,8 @@ class WalletManager {
             });
 
             if (!response.ok) {
-                throw new Error('Ошибка при выводе средств');
+                const error = await response.json();
+                throw new Error(error.error || 'Ошибка при выводе средств');
             }
 
             const result = await response.json();
@@ -136,22 +144,20 @@ class WalletManager {
             });
 
             this.updateUI();
-            this.showAlert('Вывод средств выполнен успешно!', 'success');
+            this.showAlert('✅ Вывод средств выполнен успешно!', 'success');
+            return result;
             
         } catch (error) {
-            this.showAlert(error.message, 'error');
+            this.showAlert('❌ ' + error.message, 'error');
             throw error;
         }
     }
 
     updateUI() {
-        // Update balance
         const balanceElement = document.getElementById('balance');
         if (balanceElement) {
             balanceElement.textContent = `${this.balance.toFixed(2)} TON`;
         }
-
-        // Update transactions list
         this.updateTransactionsList();
     }
 
@@ -159,23 +165,30 @@ class WalletManager {
         const transactionsList = document.getElementById('transactionsList');
         if (!transactionsList) return;
 
+        if (this.transactions.length === 0) {
+            transactionsList.innerHTML = '<div class="transaction-item">Нет операций</div>';
+            return;
+        }
+
         transactionsList.innerHTML = '';
 
         this.transactions.slice(0, 10).forEach(transaction => {
             const transactionElement = document.createElement('div');
-            transactionElement.className = `transaction-item ${transaction.type}`;
+            transactionElement.className = `transaction-item`;
             
             const date = new Date(transaction.date).toLocaleDateString('ru-RU');
+            const time = new Date(transaction.date).toLocaleTimeString('ru-RU');
             const amountClass = transaction.type === 'deposit' ? 'transaction-deposit' : 'transaction-withdraw';
             const amountSign = transaction.type === 'deposit' ? '+' : '-';
+            const typeText = transaction.type === 'deposit' ? 'Пополнение' : 'Вывод';
             
             transactionElement.innerHTML = `
                 <div>
-                    <div>${transaction.type === 'deposit' ? 'Пополнение' : 'Вывод'}</div>
-                    <small>${date}</small>
+                    <div>${typeText}</div>
+                    <small>${date} ${time}</small>
                 </div>
                 <div class="transaction-amount ${amountClass}">
-                    ${amountSign}${transaction.amount} TON
+                    ${amountSign}${transaction.amount.toFixed(2)} TON
                 </div>
             `;
             
@@ -184,7 +197,6 @@ class WalletManager {
     }
 
     showAlert(message, type) {
-        // Remove existing alerts
         const existingAlert = document.querySelector('.alert');
         if (existingAlert) {
             existingAlert.remove();
