@@ -9,7 +9,13 @@ app.use(express.static('.'));
 let users = {};
 
 app.get('/tonconnect.json', (req, res) => {
-    res.sendFile(path.join(__dirname, 'tonconnect.json'));
+    res.json({
+        "url": "https://your-app.onrender.com",
+        "name": "TON Wallet App",
+        "iconUrl": "https://your-app.onrender.com/assets/icon.png",
+        "termsOfUseUrl": "https://your-app.onrender.com/terms",
+        "privacyPolicyUrl": "https://your-app.onrender.com/privacy"
+    });
 });
 
 app.get('/', (req, res) => {
@@ -18,18 +24,28 @@ app.get('/', (req, res) => {
 
 app.post('/api/deposit', (req, res) => {
     const { userId, amount } = req.body;
+    if (!userId || !amount) {
+        return res.json({ success: false, error: 'Неверные данные' });
+    }
+    
     if (!users[userId]) {
         users[userId] = { balance: 0 };
     }
+    
     users[userId].balance += parseFloat(amount);
     res.json({ success: true, balance: users[userId].balance });
 });
 
 app.post('/api/withdraw', (req, res) => {
     const { userId, amount } = req.body;
-    if (!users[userId] || users[userId].balance < amount) {
+    if (!userId || !amount) {
+        return res.json({ success: false, error: 'Неверные данные' });
+    }
+    
+    if (!users[userId] || users[userId].balance < parseFloat(amount)) {
         return res.json({ success: false, error: 'Недостаточно средств' });
     }
+    
     users[userId].balance -= parseFloat(amount);
     res.json({ success: true, balance: users[userId].balance });
 });

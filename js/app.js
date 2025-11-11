@@ -1,29 +1,84 @@
 class WalletApp {
     constructor() {
+        this.connector = null;
+        this.wallet = null;
         this.userId = null;
+        this.userBalance = 0;
         this.init();
     }
 
-    init() {
-        // Инициализация Telegram Web App
+    async init() {
+        // Telegram Web App
         this.tg = window.Telegram.WebApp;
         this.tg.expand();
-        this.userId = this.tg.initDataUnsafe.user?.id;
+        this.userId = this.tg.initDataUnsafe.user?.id || 'user_' + Date.now();
         
         // Инициализация TON Connect
-        window.tonConnect.init();
-        
+        await this.initTonConnect();
         this.bindEvents();
-        this.loadBalance();
+        this.loadAppBalance();
+    }
+
+    async initTonConnect() {
+        // Создаем кнопку подключения
+        this.tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+            manifestUrl: window.location.origin + '/tonconnect.json',
+            buttonRootId: 'tonconnect-button'
+        });
+
+        // Подписываемся на изменения статуса кошелька
+        this.tonConnectUI.onStatusChange(wallet => {
+            if (wallet) {
+                this.wallet = wallet;
+                this.onWalletConnected(wallet);
+                this.loadWalletBalance();
+            } else {
+                this.wallet = null;
+                this.onWalletDisconnected();
+            }
+        });
+    }
+
+    onWalletConnected(wallet) {
+        document.getElementById('walletInfo').classList.remove('hidden');
+        const shortAddress = wallet.account.address.slice(0, 8) + '...' + wallet.account.address.slice(-8);
+        document.getElementById('walletAddress').textContent = shortAddress;
+        this.showStatus('Кошелек подключен!', 'success');
+    }
+
+    onWalletDisconnected() {
+        document.getElementById('walletInfo').classList.add('hidden');
+        document.getElementById('walletBalance').textContent = '0 TON';
+        this.showStatus('Кошелек отключен', 'error');
+    }
+
+    async loadWalletBalance() {
+        if (!this.wallet) return;
+        
+        try {
+            // Здесь будет запрос к TON API для получения баланса кошелька
+            // Пока заглушка
+            const balance = Math.random() * 100;
+            document.getElementById('walletBalance').textContent = balance.toFixed(2) + ' TON';
+        } catch (error) {
+            console.error('Error loading wallet balance:', error);
+        }
+    }
+
+    async loadAppBalance() {
+        try {
+            const response = await fetch(`/api/balance/${this.userId}`);
+            const data = await response.json();
+            this.userBalance = data.balance;
+            document.getElementById('balance').textContent = this.userBalance + ' TON';
+        } catch (error) {
+            console.error('Error loading app balance:', error);
+        }
     }
 
     bindEvents() {
-        document.getElementById('connectWallet').addEventListener('click', () => {
-            window.tonConnect.connectWallet();
-        });
-
         document.getElementById('disconnectWallet').addEventListener('click', () => {
-            window.tonConnect.disconnectWallet();
+            this.tonConnectUI.disconnect();
         });
 
         document.getElementById('depositBtn').addEventListener('click', () => {
@@ -38,71 +93,99 @@ class WalletApp {
     async handleDeposit() {
         const amount = document.getElementById('depositAmount').value;
         if (!amount || amount < 0.1) {
-            window.tonConnect.showStatus('Минимальная сумма депозита: 0.1 TON', 'error');
+            this.showStatus('Минимальная сумма депозита: 0.1 TON', 'error');
             return;
         }
 
-        if (!window.tonConnect.connected) {
-            window.tonConnect.showStatus('Подключите кошелек сначала', 'error');
+        if (!this.wallet) {
+            this.showStatus('Подключите кошелек сначала', 'error');
             return;
         }
 
         try {
-            // Здесь будет логика отправки TON на контракт
-            const result = await fetch('/api/deposit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: this.userId, amount: amount })
-            });
+            // Создаем транзакцию для депозита
+            const transaction = {
+                validUntil: Math.floor(Date.now() / 1000) + 600, // 10 минут
+                messages: [
+                    {
+                        address: 'EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c', // Адрес для депозита
+                        amount: (amount * 1000000000).toString(), // Конвертация в наноTON
+                    }
+                ]
+            };
 
-            const data = await result.json();
-            if (data.success) {
-                window.tonConnect.showStatus(`Депозит ${amount} TON успешен!`, 'success');
-                this.loadBalance();
-                document.getElementById('depositAmount').value = '';
+            // Отправляем транзакцию через кошелек
+            const result = await this.tonConnectUI.sendTransaction(transaction);
+            
+            if (result) {
+                // Сохраняем депозит в базу
+                const response = await fetch('/api/deposit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        userId: this.userId, 
+                        amount: amount,
+                        txHash: result.boc 
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    this.showStatus(`Депозит ${amount} TON успешен!`, 'success');
+                    this.loadAppBalance();
+                    document.getElementById('depositAmount').value = '';
+                }
             }
         } catch (error) {
-            window.tonConnect.showStatus('Ошибка депозита', 'error');
+            this.showStatus('Ошибка депозита: ' + error.message, 'error');
         }
     }
 
     async handleWithdraw() {
         const amount = document.getElementById('withdrawAmount').value;
         if (!amount || amount < 0.1) {
-            window.tonConnect.showStatus('Минимальная сумма вывода: 0.1 TON', 'error');
+            this.showStatus('Минимальная сумма вывода: 0.1 TON', 'error');
+            return;
+        }
+
+        if (!this.wallet) {
+            this.showStatus('Подключите кошелек сначала', 'error');
             return;
         }
 
         try {
-            const result = await fetch('/api/withdraw', {
+            const response = await fetch('/api/withdraw', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: this.userId, amount: amount })
+                body: JSON.stringify({ 
+                    userId: this.userId, 
+                    amount: amount,
+                    walletAddress: this.wallet.account.address 
+                })
             });
 
-            const data = await result.json();
+            const data = await response.json();
             if (data.success) {
-                window.tonConnect.showStatus(`Вывод ${amount} TON успешен!`, 'success');
-                this.loadBalance();
+                this.showStatus(`Вывод ${amount} TON успешен!`, 'success');
+                this.loadAppBalance();
                 document.getElementById('withdrawAmount').value = '';
             } else {
-                window.tonConnect.showStatus(data.error, 'error');
+                this.showStatus(data.error, 'error');
             }
         } catch (error) {
-            window.tonConnect.showStatus('Ошибка вывода', 'error');
+            this.showStatus('Ошибка вывода', 'error');
         }
     }
 
-    async loadBalance() {
-        if (!this.userId) return;
+    showStatus(message, type) {
+        const statusEl = document.getElementById('transactionStatus');
+        statusEl.textContent = message;
+        statusEl.className = `status-message ${type}`;
+        statusEl.classList.remove('hidden');
         
-        try {
-            const result = await fetch(`/api/balance/${this.userId}`);
-            const data = await result.json();
-            document.getElementById('balance').textContent = data.balance + ' TON';
-        } catch (error) {
-            console.error('Load balance error:', error);
-        }
+        setTimeout(() => {
+            statusEl.classList.add('hidden');
+        }, 5000);
     }
 }
 

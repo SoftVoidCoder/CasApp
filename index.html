@@ -6,6 +6,7 @@
     <title>TON Wallet</title>
     <link rel="stylesheet" href="styles/main.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://unpkg.com/@tonconnect/ui@2.1.0/dist/tonconnect-ui.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -18,21 +19,22 @@
         </div>
 
         <div class="wallet-section">
-            <button id="connectWallet" class="btn-primary">Подключить кошелек</button>
+            <div id="tonconnect-button"></div>
             <div id="walletInfo" class="wallet-info hidden">
                 <div class="wallet-address" id="walletAddress"></div>
-                <button id="disconnectWallet" class="btn-secondary">Отключить</button>
+                <div class="wallet-balance" id="walletBalance">0 TON</div>
+                <button id="disconnectWallet" class="btn-secondary">Отключить кошелек</button>
             </div>
         </div>
 
         <div class="actions-section">
             <div class="input-group">
-                <input type="number" id="depositAmount" placeholder="Сумма депозита" min="0.1" step="0.1">
+                <input type="number" id="depositAmount" placeholder="Сумма депозита (мин 0.1)" min="0.1" step="0.1">
                 <button id="depositBtn" class="btn-success">Депозит</button>
             </div>
             
             <div class="input-group">
-                <input type="number" id="withdrawAmount" placeholder="Сумма вывода" min="0.1" step="0.1">
+                <input type="number" id="withdrawAmount" placeholder="Сумма вывода (мин 0.1)" min="0.1" step="0.1">
                 <button id="withdrawBtn" class="btn-warning">Вывод</button>
             </div>
         </div>
@@ -40,7 +42,6 @@
         <div id="transactionStatus" class="status-message hidden"></div>
     </div>
 
-    <script src="js/ton-connect.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
