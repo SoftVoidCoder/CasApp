@@ -1,0 +1,27 @@
+body {
+  min-height: 100vh;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #000 !important;
+  color: #fff;
+}
+
+.card {
+  border-radius: 12px;
+}
+
+.bg-black {
+  background-color: #111 !important;
+}
+
+.border-secondary {
+  border-color: #333 !important;
+}
+
+.text-success {
+  color: #00C88C !important; /* Зелёный как в TON */
+}
+
+/* Убираем выделение */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
