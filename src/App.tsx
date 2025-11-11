@@ -1,4 +1,3 @@
-// src/App.tsx
 import { useEffect, useState } from 'react';
 
 interface User {
@@ -11,16 +10,25 @@ interface User {
 
 const App = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [balance] = useState<string>('12.56 TON'); // Пример баланса
+  const [balance] = useState<string>('12.56 TON');
 
   useEffect(() => {
     if ('Telegram' in window) {
       const tg = window.Telegram.WebApp;
-      const user = tg.initDataUnsafe.user;
+      const userData = tg.initDataUnsafe.user;
 
-      if (user) {
-        setUser(user as User);
+      if (userData) {
+        setUser(userData as User);
       }
+    } else {
+      // Заглушка для разработки
+      setUser({
+        id: 123456789,
+        first_name: 'Иван',
+        last_name: 'Телеграмов',
+        username: 'ivantele',
+        photo_url: 'https://via.placeholder.com/80/009688/FFFFFF?text=ИТ',
+      });
     }
   }, []);
 
@@ -31,7 +39,6 @@ const App = () => {
 
   return (
     <div style={styles.container}>
-      {/* Аватар и имя */}
       <div style={styles.profileHeader}>
         <img
           src={user?.photo_url || 'https://via.placeholder.com/80'}
@@ -42,21 +49,18 @@ const App = () => {
         {user?.username && <p style={styles.username}>@{user.username}</p>}
       </div>
 
-      {/* Баланс */}
       <div style={styles.balanceCard}>
-        <p style={styles.balanceLabel}>Ваш баланс</p>
+        <p style={styles.balanceLabel}>Баланс</p>
         <p style={styles.balanceValue}>{balance}</p>
       </div>
 
-      {/* Доп. информация */}
       <div style={styles.infoCard}>
-        <p>ID: <span style={styles.infoText}>{user?.id || '—'}</span></p>
+        <p>ID: <span style={styles.infoText}>{user?.id}</span></p>
       </div>
     </div>
   );
 };
 
-// Стили в объектах (подходит для React)
 const styles = {
   container: {
     padding: '20px',
@@ -67,7 +71,7 @@ const styles = {
   },
   profileHeader: {
     textAlign: 'center' as const,
-    margin: '30px 0',
+    margin: '40px 0 20px',
   },
   avatar: {
     width: '80px',
@@ -77,14 +81,14 @@ const styles = {
     objectFit: 'cover' as const,
   },
   name: {
-    marginTop: '12px',
+    margin: '12px 0 4px',
     fontSize: '1.5rem',
     fontWeight: '600',
   },
   username: {
     color: '#009688',
     fontSize: '1rem',
-    marginTop: '4px',
+    margin: 0,
   },
   balanceCard: {
     backgroundColor: '#111',
