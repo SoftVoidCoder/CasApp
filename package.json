@@ -2,10 +2,9 @@
   "name": "telegram-ton-wallet-app",
   "version": "1.0.0",
   "description": "Telegram Mini App with TON Wallet",
-  "main": "server.js",
+  "main": "server/server.js",
   "scripts": {
-    "start": "node server/server.js",
-    "dev": "node server/server.js"
+    "start": "node server/server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
