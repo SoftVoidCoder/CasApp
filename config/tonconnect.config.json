@@ -1,0 +1,8 @@
+{
+  "name": "CasApp",
+  "iconUrl": "https://via.placeholder.com/200/00C88C/FFFFFF?text=CA",
+  "tgAppUrl": "https://t.me/casapp_bot/app",
+  "actionsConfiguration": {
+    "network": "testnet"
+  }
+}

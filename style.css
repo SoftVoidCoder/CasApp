@@ -1,27 +1,63 @@
 body {
-  min-height: 100vh;
-  font-family: 'Segoe UI', sans-serif;
   background-color: #000 !important;
   color: #fff;
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
 }
 
-.card {
+.container {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.text-accent {
+  color: #00C88C;
+}
+
+.btn-gold {
+  background: linear-gradient(90deg, #FFD700, #FFC107);
+  color: #000;
+  font-weight: 600;
+  border: none;
   border-radius: 12px;
 }
 
-.bg-black {
-  background-color: #111 !important;
+.balance {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #FFD700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
 }
 
-.border-secondary {
-  border-color: #333 !important;
+.rounded-circle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 3px solid #00C88C;
+  object-fit: cover;
 }
 
-.text-success {
-  color: #00C88C !important; /* Зелёный как в TON */
+.hidden {
+  display: none !important;
 }
 
-/* Убираем выделение */
-* {
-  -webkit-tap-highlight-color: transparent;
+.alert {
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+}
+
+.alert-success {
+  background: rgba(0, 200, 140, 0.2);
+  color: #00C88C;
+  border: 1px solid #00C88C;
+}
+
+.alert-error {
+  background: rgba(255, 59, 48, 0.2);
+  color: #FF3B30;
+  border: 1px solid #FF3B30;
 }
