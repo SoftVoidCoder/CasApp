@@ -180,7 +180,7 @@ class WalletApp {
     showStatus(message, type) {
         const statusEl = document.getElementById('transactionStatus');
         statusEl.textContent = message;
-        statusEl.className = `status-message ${type}`;
+        statusEl.className = `alert ${type === 'success' ? 'success' : 'error'}`;
         statusEl.classList.remove('hidden');
         
         setTimeout(() => {
