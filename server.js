@@ -3,12 +3,12 @@ const cors = require('cors');
 const path = require('path');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '..')));
+app.use(express.static(__dirname)); // Используем текущую директорию
 
 // In-memory storage
 let users = new Map();
@@ -121,9 +121,9 @@ app.post('/api/withdraw', (req, res) => {
     });
 });
 
-// Serve frontend
+// Serve frontend - исправленный путь
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../index.html'));
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.listen(PORT, () => {
