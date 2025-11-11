@@ -1,191 +1,112 @@
-class TelegramApp {
+class WalletApp {
     constructor() {
-        this.tg = window.Telegram?.WebApp;
+        this.userId = null;
         this.init();
     }
 
     init() {
-        if (this.tg) {
-            this.tg.ready();
-            this.tg.expand();
-            this.setupTelegramUser();
-        }
-
-        this.setupEventListeners();
-    }
-
-    setupTelegramUser() {
-        const user = this.tg.initDataUnsafe?.user;
+        // Инициализация Telegram Web App
+        this.tg = window.Telegram.WebApp;
+        this.tg.expand();
+        this.userId = this.tg.initDataUnsafe.user?.id;
         
-        if (user) {
-            const userNameElement = document.getElementById('userName');
-            const userPhotoElement = document.getElementById('userPhoto');
-            
-            if (userNameElement) {
-                userNameElement.textContent = user.first_name || 'User';
-            }
-            
-            if (userPhotoElement && user.photo_url) {
-                userPhotoElement.src = user.photo_url;
-            }
-        }
+        // Инициализация TON Connect
+        window.tonConnect.init();
+        
+        this.bindEvents();
+        this.loadBalance();
     }
 
-    setupEventListeners() {
-        // Wallet connection
-        const connectBtn = document.getElementById('connectWalletBtn');
-        const disconnectBtn = document.getElementById('disconnectWalletBtn');
-        const depositBtn = document.getElementById('depositBtn');
-        const withdrawBtn = document.getElementById('withdrawBtn');
+    bindEvents() {
+        document.getElementById('connectWallet').addEventListener('click', () => {
+            window.tonConnect.connectWallet();
+        });
 
-        if (connectBtn) {
-            connectBtn.addEventListener('click', () => this.connectWallet());
-        }
+        document.getElementById('disconnectWallet').addEventListener('click', () => {
+            window.tonConnect.disconnectWallet();
+        });
 
-        if (disconnectBtn) {
-            disconnectBtn.addEventListener('click', () => this.disconnectWallet());
-        }
+        document.getElementById('depositBtn').addEventListener('click', () => {
+            this.handleDeposit();
+        });
 
-        if (depositBtn) {
-            depositBtn.addEventListener('click', () => this.processDeposit());
-        }
-
-        if (withdrawBtn) {
-            withdrawBtn.addEventListener('click', () => this.processWithdraw());
-        }
+        document.getElementById('withdrawBtn').addEventListener('click', () => {
+            this.handleWithdraw();
+        });
     }
 
-    async connectWallet() {
-        try {
-            const connectBtn = document.getElementById('connectWalletBtn');
-            connectBtn.classList.add('loading');
-            connectBtn.textContent = 'Подключение...';
-
-            await tonConnectManager.connectWallet();
-            
-        } catch (error) {
-            console.error('Connection failed:', error);
-            walletManager.showAlert('Ошибка подключения кошелька', 'error');
-        } finally {
-            const connectBtn = document.getElementById('connectWalletBtn');
-            connectBtn.classList.remove('loading');
-        }
-    }
-
-    async disconnectWallet() {
-        try {
-            await tonConnectManager.disconnectWallet();
-        } catch (error) {
-            console.error('Disconnection failed:', error);
-            walletManager.showAlert('Ошибка отключения кошелька', 'error');
-        }
-    }
-
-    async processDeposit() {
-        const amountInput = document.getElementById('depositAmount');
-        const amount = parseFloat(amountInput.value);
-
+    async handleDeposit() {
+        const amount = document.getElementById('depositAmount').value;
         if (!amount || amount < 0.1) {
-            walletManager.showAlert('Минимальная сумма депозита: 0.1 TON', 'error');
+            window.tonConnect.showStatus('Минимальная сумма депозита: 0.1 TON', 'error');
+            return;
+        }
+
+        if (!window.tonConnect.connected) {
+            window.tonConnect.showStatus('Подключите кошелек сначала', 'error');
             return;
         }
 
         try {
-            const depositBtn = document.getElementById('depositBtn');
-            depositBtn.classList.add('loading');
-            depositBtn.textContent = 'Обработка...';
+            // Здесь будет логика отправки TON на контракт
+            const result = await fetch('/api/deposit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: this.userId, amount: amount })
+            });
 
-            await walletManager.deposit(amount);
-            amountInput.value = '';
-
+            const data = await result.json();
+            if (data.success) {
+                window.tonConnect.showStatus(`Депозит ${amount} TON успешен!`, 'success');
+                this.loadBalance();
+                document.getElementById('depositAmount').value = '';
+            }
         } catch (error) {
-            console.error('Deposit failed:', error);
-        } finally {
-            const depositBtn = document.getElementById('depositBtn');
-            depositBtn.classList.remove('loading');
-            depositBtn.textContent = 'Пополнить';
+            window.tonConnect.showStatus('Ошибка депозита', 'error');
         }
     }
 
-    async processWithdraw() {
-        const amountInput = document.getElementById('withdrawAmount');
-        const amount = parseFloat(amountInput.value);
-
+    async handleWithdraw() {
+        const amount = document.getElementById('withdrawAmount').value;
         if (!amount || amount < 0.1) {
-            walletManager.showAlert('Минимальная сумма вывода: 0.1 TON', 'error');
+            window.tonConnect.showStatus('Минимальная сумма вывода: 0.1 TON', 'error');
             return;
         }
 
         try {
-            const withdrawBtn = document.getElementById('withdrawBtn');
-            withdrawBtn.classList.add('loading');
-            withdrawBtn.textContent = 'Обработка...';
+            const result = await fetch('/api/withdraw', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: this.userId, amount: amount })
+            });
 
-            await walletManager.withdraw(amount);
-            amountInput.value = '';
-
+            const data = await result.json();
+            if (data.success) {
+                window.tonConnect.showStatus(`Вывод ${amount} TON успешен!`, 'success');
+                this.loadBalance();
+                document.getElementById('withdrawAmount').value = '';
+            } else {
+                window.tonConnect.showStatus(data.error, 'error');
+            }
         } catch (error) {
-            console.error('Withdraw failed:', error);
-        } finally {
-            const withdrawBtn = document.getElementById('withdrawBtn');
-            withdrawBtn.classList.remove('loading');
-            withdrawBtn.textContent = 'Вывести';
+            window.tonConnect.showStatus('Ошибка вывода', 'error');
         }
     }
 
-    updateWalletUI(wallet) {
-        const walletSection = document.getElementById('walletSection');
-        const connectedWallet = document.getElementById('connectedWallet');
-        const walletStatus = document.getElementById('walletStatus');
-        const walletAddress = document.getElementById('walletAddress');
-        const depositSection = document.getElementById('depositSection');
-        const withdrawSection = document.getElementById('withdrawSection');
-        const transactionsSection = document.getElementById('transactionsSection');
-
-        if (wallet) {
-            // Wallet connected
-            walletSection.style.display = 'none';
-            connectedWallet.style.display = 'block';
-            depositSection.style.display = 'block';
-            withdrawSection.style.display = 'block';
-            transactionsSection.style.display = 'block';
-
-            walletStatus.textContent = 'Кошелек подключен';
-            walletStatus.className = 'wallet-status connected';
-            
-            const address = wallet.account.address;
-            walletAddress.textContent = `${address.slice(0, 6)}...${address.slice(-6)}`;
-
-        } else {
-            // Wallet disconnected
-            walletSection.style.display = 'block';
-            connectedWallet.style.display = 'none';
-            depositSection.style.display = 'none';
-            withdrawSection.style.display = 'none';
-            transactionsSection.style.display = 'none';
-
-            walletStatus.textContent = 'Кошелек не подключен';
-            walletStatus.className = 'wallet-status disconnected';
+    async loadBalance() {
+        if (!this.userId) return;
+        
+        try {
+            const result = await fetch(`/api/balance/${this.userId}`);
+            const data = await result.json();
+            document.getElementById('balance').textContent = data.balance + ' TON';
+        } catch (error) {
+            console.error('Load balance error:', error);
         }
     }
 }
 
-// Global functions for TON Connect callbacks
-window.onWalletConnected = function(wallet) {
-    const app = window.telegramApp;
-    if (app) {
-        app.updateWalletUI(wallet);
-    }
-};
-
-window.onWalletDisconnected = function() {
-    const app = window.telegramApp;
-    if (app) {
-        app.updateWalletUI(null);
-    }
-};
-
-// Initialize app when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    window.telegramApp = new TelegramApp();
+// Запуск приложения
+document.addEventListener('DOMContentLoaded', () => {
+    new WalletApp();
 });

@@ -1,0 +1,145 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #0f0f0f;
+    color: #ffffff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.profile-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.profile-header h1 {
+    font-size: 24px;
+    margin-bottom: 15px;
+    color: #fff;
+}
+
+.balance-section {
+    background: #1a1a1a;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #333;
+}
+
+.balance-label {
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 8px;
+}
+
+.balance-amount {
+    font-size: 32px;
+    font-weight: bold;
+    color: #00ff88;
+}
+
+.wallet-section {
+    margin-bottom: 25px;
+}
+
+.btn-primary, .btn-secondary, .btn-success, .btn-warning {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 10px;
+}
+
+.btn-primary {
+    background: #0088cc;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #0077bb;
+}
+
+.btn-secondary {
+    background: #333;
+    color: white;
+}
+
+.btn-success {
+    background: #00aa55;
+    color: white;
+}
+
+.btn-warning {
+    background: #cc5500;
+    color: white;
+}
+
+.wallet-info {
+    background: #1a1a1a;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #333;
+    margin-top: 10px;
+}
+
+.wallet-address {
+    font-family: monospace;
+    font-size: 14px;
+    color: #00ff88;
+    margin-bottom: 10px;
+    word-break: break-all;
+}
+
+.input-group {
+    margin-bottom: 15px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 15px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    color: white;
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #0088cc;
+}
+
+.status-message {
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.status-message.success {
+    background: #00aa55;
+    color: white;
+}
+
+.status-message.error {
+    background: #cc0000;
+    color: white;
+}
+
+.hidden {
+    display: none;
+}
