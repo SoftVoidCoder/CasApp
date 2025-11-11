@@ -1,21 +1,28 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 
-// Разрешаем запросы с любого источника (подойдёт для теста)
 app.use(cors({
   origin: "*"
 }));
 
 app.use(express.json());
 
-// Проверка сервера
+// РАЗДАВАЙ СТАТИЧЕСКИЕ ФАЙЛЫ
+app.use(express.static(path.join(__dirname)));
+
+// Главная страница
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// API маршруты
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Сервер работает!' });
 });
 
-// Получение баланса (заглушка)
 app.get('/api/balance/:address', (req, res) => {
   const { address } = req.params;
   console.log(`Запрос баланса: ${address}`);
@@ -23,7 +30,6 @@ app.get('/api/balance/:address', (req, res) => {
   res.json({ address, balance, currency: 'TON' });
 });
 
-// Вывод TON (заглушка)
 app.post('/api/withdraw', (req, res) => {
   const { address, amount } = req.body;
 
